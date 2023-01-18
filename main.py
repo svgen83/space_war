@@ -2,6 +2,7 @@ import asyncio
 import curses
 import time
 
+from itertools import cycle
 from random import randint, choice
 from game_tools import draw_frame, read_controls, get_frame_size
 
@@ -14,7 +15,8 @@ def draw(canvas):
   canvas.border()
   canvas.refresh()
   height, width = canvas.getmaxyx()
-  stars_quantaty = 200 
+  stars_quantaty = 200
+  frames = draw_rocket()
   coroutines = []
   coroutines.append(fire(canvas, height-1, 10))
          
@@ -25,13 +27,15 @@ def draw(canvas):
     coroutine = blink(canvas, row, column, symbol)
     coroutines.append(coroutine)
 
+
   while True:
     try:
-        draw_rocket(canvas=canvas, row=row, column=column)
+      for frame in cycle(frames):
+        fly_rocket(frame, canvas, row=row, column=column)
         for coroutine in coroutines:
-            coroutine.send(None)
-            canvas.refresh()
-        time.sleep(TIC_TIMEOUT)
+          coroutine.send(None)
+          canvas.refresh()
+      time.sleep(TIC_TIMEOUT)
     except StopIteration:
       coroutines.remove(coroutine)
 
@@ -85,20 +89,19 @@ async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0
         row += rows_speed
         column += columns_speed
 
-def draw_rocket(canvas, row, column):
+def draw_rocket():
     with open("figures/rocket_frame_1.txt") as f:
         frame1 = f.read()
-    with open("figures/rocket_frame_1.txt") as f:
+    with open("figures/rocket_frame_2.txt") as f:
         frame2 = f.read()
-    
-    draw_frame(canvas, row, column, frame1)
+    return frame1, frame2
+  
+        
+def fly_rocket(frame, canvas, row, column):
+    draw_frame(canvas, row, column, frame)
     canvas.refresh()
     time.sleep(1)
-    draw_frame(canvas, row, column, frame1, negative=True)
-    draw_frame(canvas, row, column, frame2)
-    canvas.refresh()
-    time.sleep(1)
-    draw_frame(canvas, row, column, frame2, negative=True)
+    draw_frame(canvas, row, column, frame, negative=True)
         
       
 if __name__ == '__main__':
