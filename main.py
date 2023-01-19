@@ -23,7 +23,7 @@ def draw(canvas):
   coroutines.append(fire(canvas, height-1, width//3))
   rocket = fly_rocket(canvas, height//2, width//2, frames)
   coroutines.append(rocket)
-         
+  
   for i in range(stars_quantity):
     symbol = choice("+*.:")
     row = randint(1, height-2)
@@ -100,10 +100,16 @@ def open_frames():
   
         
 async def fly_rocket(canvas, row, column, frames):
+    max_height, max_width = canvas.getmaxyx()
     for frame in cycle(frames):
+      frame_rows, frame_columns = get_frame_size(frame)
       rows_dir, columns_dir, _ = read_controls(canvas)
-      row += rows_dir
-      column += columns_dir
+
+      if (row + rows_dir) > 0 and (row + rows_dir) < (max_height - frame_rows):
+        row += rows_dir
+      if (column + columns_dir) >= 0 and (column + columns_dir) < (max_width - frame_columns):
+        column += columns_dir
+      
       draw_frame(canvas, row, column, frame)
       await asyncio.sleep(0)
       draw_frame(canvas, row, column, frame, negative=True)
