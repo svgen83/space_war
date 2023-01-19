@@ -1,4 +1,4 @@
-﻿# space war
+# Space war
 
 A blank for the game, written in the style of 80s console games.
 So far, a star field and a spaceship controlled with the cursor keys have been made.
