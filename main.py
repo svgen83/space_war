@@ -11,6 +11,9 @@ from canvas_tools import draw_frame, read_controls, get_frame_size
 
 STARS_QUANTITY = 100
 TIC_TIMEOUT = 0.1
+BORDER_THICKNESS = 1
+MIN_HEIGHT, MIN_WIDTH = 1, 1
+MIN_DELAY, MAX_DELAY = 1, 20
 
 
 def draw(canvas):
@@ -18,18 +21,22 @@ def draw(canvas):
     canvas.border()
     canvas.nodelay(True)
 
-    height, width = canvas.getmaxyx()
+    window_height, window_width = canvas.getmaxyx()
+    max_height = window_height - 1
+    max_width = window_width - 1
+    delay = randint(MIN_DELAY, MAX_DELAY)
+    
     frames = get_rocket_frames()
     coroutines = []
-    coroutines.append(fire(canvas, height-1, width//3))
-    rocket = fly_rocket(canvas, height//2, width//2, frames)
+    coroutines.append(fire(canvas, max_height, max_width//3))
+    rocket = fly_rocket(canvas, max_height//2, max_width//2, frames)
     coroutines.append(rocket)
 
     for star in range(STARS_QUANTITY):
         symbol = choice("+*.:")
-        row = randint(1, height-2)
-        column = randint(1, width-2)
-        coroutine = blink(canvas, row, column, symbol)
+        row = randint(MIN_HEIGHT, max_height - BORDER_THICKNESS)
+        column = randint(MIN_WIDTH, max_width - BORDER_THICKNESS)
+        coroutine = blink(canvas, row, column, symbol, delay)
         coroutines.append(coroutine)
 
     while True:
@@ -42,8 +49,7 @@ def draw(canvas):
         time.sleep(TIC_TIMEOUT)
 
 
-async def blink(canvas, row, column, symbol):
-    delay = randint(1, 20)
+async def blink(canvas, row, column, symbol, delay):
     while True:
         canvas.addstr(row, column, symbol, curses.A_DIM)
         for i in range(delay):
