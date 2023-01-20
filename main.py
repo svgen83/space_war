@@ -14,12 +14,11 @@ TIC_TIMEOUT = 0.1
 def draw(canvas):
     curses.curs_set(False)
     canvas.border()
-    canvas.refresh()
     canvas.nodelay(True)
 
     height, width = canvas.getmaxyx()
     stars_quantity = 100
-    frames = open_frames()
+    frames = get_rocket_frames()
     coroutines = []
     coroutines.append(fire(canvas, height-1, width//3))
     rocket = fly_rocket(canvas, height//2, width//2, frames)
@@ -43,8 +42,8 @@ def draw(canvas):
 
 
 async def blink(canvas, row, column, symbol):
+    delay = randint(1, 20)
     while True:
-        delay = randint(1, 20)
         canvas.addstr(row, column, symbol, curses.A_DIM)
         for i in range(delay):
             await asyncio.sleep(0)
@@ -89,7 +88,7 @@ async def fire(canvas, start_row, start_column,
         column += columns_speed
 
 
-def open_frames():
+def get_rocket_frames():
     with open("figures/rocket_frame_1.txt") as f:
         frame1 = f.read()
     with open("figures/rocket_frame_2.txt") as f:
@@ -98,8 +97,9 @@ def open_frames():
 
 
 async def fly_rocket(canvas, row, column, frames):
+    frame1, frame2 = frames
     max_height, max_width = canvas.getmaxyx()
-    for frame in cycle(frames):
+    for frame in cycle([frame1, frame1, frame2, frame2]):
         frame_rows, frame_columns = get_frame_size(frame)
         rows_dir, columns_dir, _ = read_controls(canvas)
         row_increment = row + rows_dir
