@@ -34,39 +34,36 @@ def draw(canvas):
         symbol = choice("+*.:")
         row = randint(MIN_HEIGHT, max_height - BORDER_THICKNESS)
         column = randint(MIN_WIDTH, max_width - BORDER_THICKNESS)
-        coroutine = blink(canvas, row, column, symbol)
+        coroutine = blink(canvas, row, column, symbol,
+                          randint(MIN_DELAY, MAX_DELAY))
         coroutines.append(coroutine)
 
     while True:
         for coroutine in coroutines.copy():
             try:
                 coroutine.send(None)
-                canvas.refresh()
             except StopIteration:
                 coroutines.remove(coroutine)
+        canvas.refresh()
         time.sleep(TIC_TIMEOUT)
 
 
-def get_delay():
-    return randint(MIN_DELAY, MAX_DELAY)
-
-
-async def blink(canvas, row, column, symbol):
+async def blink(canvas, row, column, symbol, delay):
     while True:
         canvas.addstr(row, column, symbol, curses.A_DIM)
-        for i in range(get_delay()):
+        for i in range(delay):
             await asyncio.sleep(0)
 
         canvas.addstr(row, column, symbol)
-        for i in range(get_delay()):
+        for i in range(delay):
             await asyncio.sleep(0)
 
         canvas.addstr(row, column, symbol, curses.A_BOLD)
-        for i in range(get_delay()):
+        for i in range(delay):
             await asyncio.sleep(0)
 
         canvas.addstr(row, column, symbol)
-        for i in range(get_delay()):
+        for i in range(delay):
             await asyncio.sleep(0)
 
 
@@ -112,6 +109,8 @@ def get_rocket_frames():
 async def fly_rocket(canvas, row, column, frames):
     frame1, frame2 = frames
     window_height, window_width = canvas.getmaxyx()
+    max_height = window_height - 1
+    max_width = window_width - 1
 
     for frame in cycle([frame1, frame1, frame2, frame2]):
         frame_rows, frame_columns = get_frame_size(frame)
@@ -119,10 +118,10 @@ async def fly_rocket(canvas, row, column, frames):
         row_increment = row + rows_dir
         column_increment = column + columns_dir
 
-        if MIN_HEIGHT < row_increment < window_height - frame_rows:
+        if MIN_HEIGHT < row_increment < max_height - frame_rows:
             row = row_increment
 
-        if MIN_WIDTH < column_increment < window_width - frame_columns:
+        if MIN_WIDTH < column_increment < max_width - frame_columns:
             column = column_increment
 
         draw_frame(canvas, row, column, frame)
