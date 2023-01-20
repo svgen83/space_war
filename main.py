@@ -1,5 +1,6 @@
 import asyncio
 import curses
+import os
 import time
 
 from itertools import cycle
@@ -8,6 +9,7 @@ from statistics import median
 from canvas_tools import draw_frame, read_controls, get_frame_size
 
 
+STARS_QUANTITY = 100
 TIC_TIMEOUT = 0.1
 
 
@@ -17,14 +19,13 @@ def draw(canvas):
     canvas.nodelay(True)
 
     height, width = canvas.getmaxyx()
-    stars_quantity = 100
     frames = get_rocket_frames()
     coroutines = []
     coroutines.append(fire(canvas, height-1, width//3))
     rocket = fly_rocket(canvas, height//2, width//2, frames)
     coroutines.append(rocket)
 
-    for star in range(stars_quantity):
+    for star in range(STARS_QUANTITY):
         symbol = choice("+*.:")
         row = randint(1, height-2)
         column = randint(1, width-2)
@@ -32,13 +33,13 @@ def draw(canvas):
         coroutines.append(coroutine)
 
     while True:
-        try:
-            for coroutine in coroutines:
+        for coroutine in coroutines.copy():
+            try:
                 coroutine.send(None)
                 canvas.refresh()
-            time.sleep(TIC_TIMEOUT)
-        except StopIteration:
-            coroutines.remove(coroutine)
+            except StopIteration:
+                coroutines.remove(coroutine)
+        time.sleep(TIC_TIMEOUT)
 
 
 async def blink(canvas, row, column, symbol):
@@ -89,9 +90,13 @@ async def fire(canvas, start_row, start_column,
 
 
 def get_rocket_frames():
-    with open("figures/rocket_frame_1.txt") as f:
+    path_1 = os.path.join("figures",
+                          "rocket_frame_1.txt")
+    path_2 = os.path.join("figures",
+                          "rocket_frame_2.txt")
+    with open(path_1) as f:
         frame1 = f.read()
-    with open("figures/rocket_frame_2.txt") as f:
+    with open(path_2) as f:
         frame2 = f.read()
     return frame1, frame2
 
