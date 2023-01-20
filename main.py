@@ -5,7 +5,6 @@ import time
 
 from itertools import cycle
 from random import randint, choice
-from statistics import median
 from canvas_tools import draw_frame, read_controls, get_frame_size
 
 
@@ -24,8 +23,7 @@ def draw(canvas):
     window_height, window_width = canvas.getmaxyx()
     max_height = window_height - 1
     max_width = window_width - 1
-    delay = randint(MIN_DELAY, MAX_DELAY)
-    
+
     frames = get_rocket_frames()
     coroutines = []
     coroutines.append(fire(canvas, max_height, max_width//3))
@@ -36,7 +34,7 @@ def draw(canvas):
         symbol = choice("+*.:")
         row = randint(MIN_HEIGHT, max_height - BORDER_THICKNESS)
         column = randint(MIN_WIDTH, max_width - BORDER_THICKNESS)
-        coroutine = blink(canvas, row, column, symbol, delay)
+        coroutine = blink(canvas, row, column, symbol)
         coroutines.append(coroutine)
 
     while True:
@@ -49,22 +47,26 @@ def draw(canvas):
         time.sleep(TIC_TIMEOUT)
 
 
-async def blink(canvas, row, column, symbol, delay):
+def get_delay():
+    return randint(MIN_DELAY, MAX_DELAY)
+
+
+async def blink(canvas, row, column, symbol):
     while True:
         canvas.addstr(row, column, symbol, curses.A_DIM)
-        for i in range(delay):
+        for i in range(get_delay()):
             await asyncio.sleep(0)
 
         canvas.addstr(row, column, symbol)
-        for i in range(delay):
+        for i in range(get_delay()):
             await asyncio.sleep(0)
 
         canvas.addstr(row, column, symbol, curses.A_BOLD)
-        for i in range(delay):
+        for i in range(get_delay()):
             await asyncio.sleep(0)
 
         canvas.addstr(row, column, symbol)
-        for i in range(delay):
+        for i in range(get_delay()):
             await asyncio.sleep(0)
 
 
@@ -109,21 +111,18 @@ def get_rocket_frames():
 
 async def fly_rocket(canvas, row, column, frames):
     frame1, frame2 = frames
-    max_height, max_width = canvas.getmaxyx()
+    window_height, window_width = canvas.getmaxyx()
+
     for frame in cycle([frame1, frame1, frame2, frame2]):
         frame_rows, frame_columns = get_frame_size(frame)
         rows_dir, columns_dir, _ = read_controls(canvas)
         row_increment = row + rows_dir
         column_increment = column + columns_dir
 
-        if median([row, row_increment]
-                  ) > 1 and row_increment < median(
-                      [row_increment, max_height - frame_rows]):
+        if MIN_HEIGHT < row_increment < window_height - frame_rows:
             row = row_increment
 
-        if median([column, column_increment]
-                  ) > 1 and column_increment < median(
-                      [column_increment, max_width - frame_columns]):
+        if MIN_WIDTH < column_increment < window_width - frame_columns:
             column = column_increment
 
         draw_frame(canvas, row, column, frame)
