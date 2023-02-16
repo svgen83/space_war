@@ -24,12 +24,19 @@ def draw(canvas):
     max_height = window_height - 1
     max_width = window_width - 1
 
-    frames = get_rocket_frames()
     coroutines = []
+    frames = get_rocket_frames()
     coroutines.append(fire(canvas, max_height, max_width//3))
     rocket = fly_rocket(canvas, max_height//2, max_width//2, frames)
     coroutines.append(rocket)
 
+    garbage_frames = get_garbage_frames()
+    for garbage_frame in garbage_frames:
+        garbage = fly_garbage(canvas,
+                              randint(MIN_WIDTH, max_width - BORDER_THICKNESS),
+                              garbage_frame, speed=0.5)
+        coroutines.append(garbage)
+    
     for star in range(STARS_QUANTITY):
         symbol = choice("+*.:")
         row = randint(MIN_HEIGHT, max_height - BORDER_THICKNESS)
@@ -106,6 +113,18 @@ def get_rocket_frames():
     return frame1, frame2
 
 
+def get_garbage_frames():
+    garbage_frames = []
+    garbage_figures = ["duck.txt","lamp.txt","hubble.txt",
+                       "trash_large.txt","trash_small.txt","trash_xl.txt"]
+    for figure in garbage_figures:
+        path = os.path.join("figures", figure)
+        with open(path) as f:
+            frame = f.read()
+        garbage_frames.append(frame)
+    return garbage_frames
+
+
 async def fly_rocket(canvas, row, column, frames):
     frame1, frame2 = frames
     window_height, window_width = canvas.getmaxyx()
@@ -127,6 +146,22 @@ async def fly_rocket(canvas, row, column, frames):
         draw_frame(canvas, row, column, frame)
         await asyncio.sleep(0)
         draw_frame(canvas, row, column, frame, negative=True)
+
+
+async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
+    """Animate garbage, flying from top to bottom. Сolumn position will stay same, as specified on start."""
+    rows_number, columns_number = canvas.getmaxyx()
+
+    column = max(column, 0)
+    column = min(column, columns_number - 1)
+
+    row = 0
+
+    while row < rows_number:
+        draw_frame(canvas, row, column, garbage_frame)
+        await asyncio.sleep(0)
+        draw_frame(canvas, row, column, garbage_frame, negative=True)
+        row += speed
 
 
 def main():
