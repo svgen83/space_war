@@ -31,11 +31,6 @@ def draw(canvas):
     coroutines.append(rocket)
 
     garbage_frames = get_garbage_frames()
-    for garbage_frame in garbage_frames:
-        garbage = fly_garbage(canvas,
-                              randint(MIN_WIDTH, max_width - BORDER_THICKNESS),
-                              garbage_frame, speed=0.5)
-        coroutines.append(garbage)
     
     for star in range(STARS_QUANTITY):
         symbol = choice("+*.:")
@@ -46,6 +41,10 @@ def draw(canvas):
         coroutines.append(coroutine)
 
     while True:
+        garbage_frame = choice(garbage_frames)
+        garbage = fill_orbit_with_garbage(canvas, garbage_frame)
+        coroutines.append(garbage)
+            
         for coroutine in coroutines.copy():
             try:
                 coroutine.send(None)
@@ -162,6 +161,17 @@ async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
         await asyncio.sleep(0)
         draw_frame(canvas, row, column, garbage_frame, negative=True)
         row += speed
+        
+        
+async def fill_orbit_with_garbage(canvas, garbage_frame):
+    _, window_width = canvas.getmaxyx()
+    max_width = window_width - 1
+    column = randint(MIN_WIDTH, max_width - BORDER_THICKNESS)
+    for i in range(5):
+        await fly_garbage(canvas,column,garbage_frame)
+        await asyncio.sleep(0)
+    #fly_garbage(canvas,column,garbage_frame)
+     
 
 
 def main():
