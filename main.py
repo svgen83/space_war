@@ -125,12 +125,15 @@ async def fly_rocket(canvas, row, column, frames):
     window_height, window_width = canvas.getmaxyx()
     max_height = window_height - 1
     max_width = window_width - 1
+    row_speed = column_speed = 0
 
     for frame in cycle([frame1, frame1, frame2, frame2]):
         frame_rows, frame_columns = get_frame_size(frame)
         rows_dir, columns_dir, _ = read_controls(canvas)
-        row_increment = row + rows_dir
-        column_increment = column + columns_dir
+        row_increment = row + row_speed
+        column_increment = column + column_speed
+        row_speed, column_speed = update_speed(
+                                  row_speed, column_speed,rows_dir, columns_dir)
 
         if MIN_HEIGHT < row_increment < max_height - frame_rows:
             row = row_increment
