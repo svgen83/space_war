@@ -6,6 +6,7 @@ import time
 from itertools import cycle
 from random import randint, choice
 from canvas_tools import draw_frame, read_controls, get_frame_size
+from physics import update_speed
 
 
 STARS_QUANTITY = 100
