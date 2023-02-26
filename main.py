@@ -7,6 +7,7 @@ from itertools import cycle
 from random import randint, choice
 from canvas_tools import draw_frame, read_controls, get_frame_size
 from physics import update_speed
+from obstacles import Obstacle, show_obstacles
 
 
 STARS_QUANTITY = 100
@@ -15,6 +16,7 @@ BORDER_THICKNESS = 1
 MIN_HEIGHT, MIN_WIDTH = 1, 1
 MIN_DELAY, MAX_DELAY = 1, 20
 coroutines = []
+obstacles = []
 
 
 def draw(canvas):
@@ -155,16 +157,23 @@ async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
 
     column = max(column, 0)
     column = min(column, columns_number - 1)
-
     row = 0
-
-    while row < rows_number:
+    rows_size, columns_size = get_frame_size(garbage_frame)
+     
+    obstacle = Obstacle(row, column, rows_size, columns_size)
+    obstacles.append(obstacle)
+    obstacle_coroutine = show_obstacles(canvas, obstacles)
+    coroutines.append(obstacle_coroutine)
+    
+    while obstacle.row < rows_number:
         draw_frame(canvas, row, column, garbage_frame)
         await asyncio.sleep(0)
         draw_frame(canvas, row, column, garbage_frame, negative=True)
         row += speed
-        
-        
+        obstacle.row += speed
+
+
+     
 async def fill_orbit_with_garbage(canvas, garbage_frames):
     global coroutines
     _, window_width = canvas.getmaxyx()
