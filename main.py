@@ -28,7 +28,6 @@ def draw(canvas):
 
     global coroutines
     frames = get_rocket_frames()
-    coroutines.append(fire(canvas, max_height, max_width//3))
     rocket = fly_rocket(canvas, max_height//2, max_width//2, frames)
     coroutines.append(rocket)
 
@@ -121,6 +120,7 @@ def get_garbage_frames():
 
 
 async def fly_rocket(canvas, row, column, frames):
+    global coroutines
     frame1, frame2 = frames
     window_height, window_width = canvas.getmaxyx()
     max_height = window_height - 1
@@ -129,11 +129,14 @@ async def fly_rocket(canvas, row, column, frames):
 
     for frame in cycle([frame1, frame1, frame2, frame2]):
         frame_rows, frame_columns = get_frame_size(frame)
-        rows_dir, columns_dir, _ = read_controls(canvas)
+        rows_dir, columns_dir, space_pressed = read_controls(canvas)
         row_increment = row + row_speed
         column_increment = column + column_speed
         row_speed, column_speed = update_speed(
-                                  row_speed, column_speed,rows_dir, columns_dir)
+                                  row_speed, column_speed,
+                                  rows_dir, columns_dir)
+        if space_pressed:                  
+            coroutines.append(fire(canvas, row, column))
 
         if MIN_HEIGHT < row_increment < max_height - frame_rows:
             row = row_increment
