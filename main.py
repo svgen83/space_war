@@ -136,7 +136,7 @@ async def fly_rocket(canvas, row, column, frames):
                                   row_speed, column_speed,
                                   rows_dir, columns_dir)
         if space_pressed:                  
-            coroutines.append(fire(canvas, row, column))
+            coroutines.append(fire(canvas, row, column+2))
 
         if MIN_HEIGHT < row_increment < max_height - frame_rows:
             row = row_increment
