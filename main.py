@@ -3,6 +3,7 @@ import curses
 import os
 import time
 
+from explosion import explode
 from itertools import cycle
 from random import randint, choice
 from canvas_tools import draw_frame, read_controls, get_frame_size
@@ -180,6 +181,7 @@ async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
         if obstacle in obstacles_in_last_collisions:
             obstacles.remove(obstacle)
             obstacles_in_last_collisions.remove(obstacle)
+            await explode(canvas, obstacle.row, obstacle.column)
             return
         
 
