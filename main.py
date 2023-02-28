@@ -152,9 +152,14 @@ async def fly_rocket(canvas, row, column, frames):
         if MIN_WIDTH < column_increment < max_width - frame_columns:
             column = column_increment
 
+        for obstacle in obstacles:
+            if obstacle.has_collision(row, column):
+                coroutines.append(show_gameover(canvas))
+                return
+
         draw_frame(canvas, row, column, frame)
         await asyncio.sleep(0)
-        draw_frame(canvas, row, column, frame, negative=True)
+        draw_frame(canvas, row, column, frame, negative=True)        
 
 
 async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
@@ -184,8 +189,6 @@ async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
             await explode(canvas, obstacle.row, obstacle.column)
             return
         
-
-
      
 async def fill_orbit_with_garbage(canvas, garbage_frames):
     global coroutines
@@ -195,13 +198,28 @@ async def fill_orbit_with_garbage(canvas, garbage_frames):
         garbage_frame = choice(garbage_frames)
         column = randint(MIN_WIDTH, max_width - BORDER_THICKNESS)
         coroutines.append(fly_garbage(canvas, column, garbage_frame))
-        await sleep(10)
+        await sleep(30)
 
 
 async def sleep(delay):
     for i in range(delay):
         await asyncio.sleep(0)
 
+
+async def show_gameover(canvas):
+    path = os.path.join("figures",
+                        "game_over.txt")
+    with open(path) as f:
+        gameover = f.read()
+        
+    window_height, window_width = canvas.getmaxyx()
+    frame_rows, frame_columns = get_frame_size(gameover)
+    row = (window_height - frame_rows) // 2
+    column = (window_width - frame_columns) //2
+    while True:
+        draw_frame(canvas, row, column, gameover)
+        await asyncio.sleep(0)
+        #draw_frame(canvas, row, column, gameover, negative=True)
      
 
 
