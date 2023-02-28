@@ -9,6 +9,7 @@ from random import randint, choice
 from canvas_tools import draw_frame, read_controls, get_frame_size
 from physics import update_speed
 from obstacles import Obstacle, show_obstacles
+from game_scenario import PHRASES, get_garbage_delay_tics
 
 
 STARS_QUANTITY = 100
@@ -16,6 +17,7 @@ TIC_TIMEOUT = 0.1
 BORDER_THICKNESS = 1
 MIN_HEIGHT, MIN_WIDTH = 1, 1
 MIN_DELAY, MAX_DELAY = 1, 20
+YEAR = 1961
 coroutines = []
 obstacles = []
 obstacles_in_last_collisions = []
@@ -25,11 +27,13 @@ def draw(canvas):
     curses.curs_set(False)
     canvas.border()
     canvas.nodelay(True)
+    canvas.derwin(1, 1)
 
     window_height, window_width = canvas.getmaxyx()
     max_height = window_height - 1
     max_width = window_width - 1
-
+    time_game_started = time.time()
+    
     global coroutines
     frames = get_rocket_frames()
     rocket = fly_rocket(canvas, max_height//2, max_width//2, frames)
@@ -48,6 +52,7 @@ def draw(canvas):
         coroutines.append(coroutine)
 
     while True:
+        watch_time(canvas, time_game_started)
         for coroutine in coroutines.copy():
             try:
                 coroutine.send(None)
@@ -192,18 +197,31 @@ async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
      
 async def fill_orbit_with_garbage(canvas, garbage_frames):
     global coroutines
+        
     _, window_width = canvas.getmaxyx()
     max_width = window_width - 1
+    years = get_garbage_delay_tics(YEAR)
+    print(years)
     while True:
         garbage_frame = choice(garbage_frames)
         column = randint(MIN_WIDTH, max_width - BORDER_THICKNESS)
         coroutines.append(fly_garbage(canvas, column, garbage_frame))
-        await sleep(30)
+        await sleep(years)
 
 
 async def sleep(delay):
     for i in range(delay):
         await asyncio.sleep(0)
+
+
+def watch_time(canvas, time_game_started):
+    global YEAR
+    watch_window = canvas.derwin(0, 10)
+    time_now = time.time()
+    diff_time = int(time_now - time_game_started)
+    if diff_time % 1.5 == 0.0:
+        YEAR += 1
+    watch_window.addstr(f"{YEAR}-{PHRASES.get(YEAR, '')}")
 
 
 async def show_gameover(canvas):
