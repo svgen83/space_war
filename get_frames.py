@@ -15,9 +15,9 @@ def get_rocket_frames():
 
 def get_garbage_frames():
     garbage_frames = []
-    garbage_figures = ["duck.txt","lamp.txt","hubble.txt",
-                       "trash_large.txt","trash_small.txt",
-                       "trash_xl.txt"]
+    garbage_figures = ["duck.txt", "lamp.txt",
+                       "hubble.txt", "trash_large.txt",
+                       "trash_small.txt", "trash_xl.txt"]
     for figure in garbage_figures:
         path = os.path.join("figures", figure)
         with open(path) as f:
