@@ -6,7 +6,9 @@ import time
 from explosion import explode
 from itertools import cycle
 from random import randint, choice
+
 from canvas_tools import draw_frame, read_controls, get_frame_size
+from get_frames import get_rocket_frames,get_garbage_frames,get_game_over_frame  
 from physics import update_speed
 from obstacles import Obstacle, show_obstacles
 from game_scenario import PHRASES, get_garbage_delay_tics
@@ -17,7 +19,8 @@ TIC_TIMEOUT = 0.1
 BORDER_THICKNESS = 1
 MIN_HEIGHT, MIN_WIDTH = 1, 1
 MIN_DELAY, MAX_DELAY = 1, 20
-YEAR = 1961
+
+year = 1961
 coroutines = []
 obstacles = []
 obstacles_in_last_collisions = []
@@ -108,37 +111,13 @@ async def fire(canvas, start_row, start_column,
         column += columns_speed
 
 
-def get_rocket_frames():
-    path_1 = os.path.join("figures",
-                          "rocket_frame_1.txt")
-    path_2 = os.path.join("figures",
-                          "rocket_frame_2.txt")
-    with open(path_1) as f:
-        frame1 = f.read()
-    with open(path_2) as f:
-        frame2 = f.read()
-    return frame1, frame2
-
-
-def get_garbage_frames():
-    garbage_frames = []
-    garbage_figures = ["duck.txt","lamp.txt","hubble.txt",
-                       "trash_large.txt","trash_small.txt","trash_xl.txt"]
-    for figure in garbage_figures:
-        path = os.path.join("figures", figure)
-        with open(path) as f:
-            frame = f.read()
-        garbage_frames.append(frame)
-    return garbage_frames
-
-
 async def fly_rocket(canvas, row, column, frames):
-    global coroutines
     frame1, frame2 = frames
     window_height, window_width = canvas.getmaxyx()
     max_height = window_height - 1
     max_width = window_width - 1
     row_speed = column_speed = 0
+    game_over_frame = get_game_over_frame()
 
     for frame in cycle([frame1, frame1, frame2, frame2]):
         frame_rows, frame_columns = get_frame_size(frame)
@@ -159,7 +138,7 @@ async def fly_rocket(canvas, row, column, frames):
 
         for obstacle in obstacles:
             if obstacle.has_collision(row, column):
-                coroutines.append(show_gameover(canvas))
+                coroutines.append(show_gameover(canvas, game_over_frame))
                 return
 
         draw_frame(canvas, row, column, frame)
@@ -178,8 +157,8 @@ async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
      
     obstacle = Obstacle(row, column, rows_size, columns_size)
     obstacles.append(obstacle)
-    obstacle_coroutine = show_obstacles(canvas, obstacles)
-    coroutines.append(obstacle_coroutine)
+##    obstacle_coroutine = show_obstacles(canvas, obstacles)
+##    coroutines.append(obstacle_coroutine)
     
     while obstacle.row < rows_number:
         draw_frame(canvas, row, column, garbage_frame)
@@ -196,11 +175,9 @@ async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
         
      
 async def fill_orbit_with_garbage(canvas, garbage_frames):
-    global coroutines
-        
     _, window_width = canvas.getmaxyx()
     max_width = window_width - 1
-    years = get_garbage_delay_tics(YEAR)
+    years = get_garbage_delay_tics(year)
     print(years)
     while True:
         garbage_frame = choice(garbage_frames)
@@ -215,31 +192,29 @@ async def sleep(delay):
 
 
 def watch_time(canvas, time_game_started):
-    global YEAR
+    global year
     watch_window = canvas.derwin(0, 10)
     time_now = time.time()
     diff_time = int(time_now - time_game_started)
     if diff_time % 1.5 == 0.0:
-        YEAR += 1
-    watch_window.addstr(f"{YEAR}-{PHRASES.get(YEAR, '')}")
+        year += 1
+    watch_window.addstr(f"{year}-{PHRASES.get(year, '')}")
 
 
-async def show_gameover(canvas):
+async def show_gameover(canvas, frame):
     path = os.path.join("figures",
                         "game_over.txt")
     with open(path) as f:
         gameover = f.read()
         
     window_height, window_width = canvas.getmaxyx()
-    frame_rows, frame_columns = get_frame_size(gameover)
+    frame_rows, frame_columns = get_frame_size(frame)
     row = (window_height - frame_rows) // 2
     column = (window_width - frame_columns) //2
     while True:
-        draw_frame(canvas, row, column, gameover)
+        draw_frame(canvas, row, column, frame)
         await asyncio.sleep(0)
-        #draw_frame(canvas, row, column, gameover, negative=True)
      
-
 
 def main():
     curses.update_lines_cols()
